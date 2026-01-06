@@ -6,24 +6,32 @@ class Product:
     def __init__(self, name):
         self.name = name
     
-    def greet(self):
+    def greet(name: str) -> str:
         '''Say hello.'''
-        return f"Hello from {self.name}"
+        return name
 
-def top_level_func():
+    def add() -> int:
+        return 56
+
+def top_level_func() -> str:
     '''A standalone function.'''
     pass
 """
 
 result = parse_python_code(test_code)
 
-print("functions :")
-for func in result["functions"]:
-    print(f" - {func['name']} : {func['params']}")
+if "error" in result:
+    print(f"error : {result['error']}")
+else:
+    print("functions :")
+    for func in result["functions"]:
+        print(
+            f" - {func['name']} : {func['params']}, return type : {func['return_type']}")
 
-print(f"classes : {result['total_classes']}")
-for cls in result["classes"]:
-    print(f"class : {cls['name']}")
-    print(f"methods : {len(cls['methods'])}")
-    for method in cls["methods"]:
-        print(f" - {method['name']} : {method['params']}")
+    print(f"classes : {result['total_classes']}")
+    for cls in result["classes"]:
+        print(f"class : {cls['name']}")
+        print(f"methods : {len(cls['methods'])}")
+        for method in cls["methods"]:
+            print(
+                f" - {method['name']} : {method['params']}, return type : {method['return_type']}")
