@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from code_parser import parse_python_code
+from llm import generate_documentation
+
 
 app = FastAPI(title="DevDocs AI",
               description="Code documentation generator",
@@ -26,5 +28,14 @@ def read_root():
 
 @app.post("/analyze")
 def analyze_code(request: CodeRequest):
-    result = parse_python_code(request.code)
-    return result
+    parsed_code = parse_python_code(request.code)
+
+    if "error" in parsed_code:
+        return parsed_code
+
+    docs = generate_documentation(parsed_code)
+
+    return {
+        "structure": parsed_code,
+        "documentation": docs
+    }
