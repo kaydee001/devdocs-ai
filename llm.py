@@ -33,6 +33,8 @@ def _build_prompt(parsed_code: Dict[str, Any]) -> str:
             params = ", ".join(func["params"])
 
             prompt += f" - {func_name}({params})\n"
+            if func["docstring"]:
+                prompt += f"Docstring : {func['docstring']}\n"
     else:
         prompt += " - None\n"
 
@@ -42,11 +44,15 @@ def _build_prompt(parsed_code: Dict[str, Any]) -> str:
 
     if parsed_code["total_classes"] > 0:
         for cls in parsed_code["classes"]:
-            prompt += f" - {cls["name"]}\n"
+            prompt += f" - {cls['name']}\n"
             if cls["methods"]:
                 for method in cls["methods"]:
                     method_params = ", ".join(method["params"])
-                    prompt += f" - {method["name"]}({method_params})\n"
+                    prompt += f" - {method['name']}({method_params})\n"
+
+                    if func["docstring"]:
+                        prompt += f"Docstring : {method['docstring']}\n"
+
     else:
         prompt += " - None\n"
 
