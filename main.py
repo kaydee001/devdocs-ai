@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from code_parser import parse_python_code
 from llm import generate_documentation
+from quality_scorer import score_documentation
 
 
 app = FastAPI(title="DevDocs AI",
@@ -35,7 +36,10 @@ def analyze_code(request: CodeRequest):
 
     docs = generate_documentation(parsed_code)
 
+    quality = score_documentation(parsed_code, docs["readme"])
+
     return {
         "structure": parsed_code,
-        "documentation": docs
+        "documentation": docs,
+        "quality_score": quality
     }
