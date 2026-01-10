@@ -32,11 +32,23 @@ def analyze_code(request: CodeRequest):
     parsed_code = parse_python_code(request.code)
 
     if "error" in parsed_code:
-        return parsed_code
+        return {"error": parsed_code["error"]}
 
     docs = generate_documentation(parsed_code)
+    if "error" in docs:
+        return {
+            "structure": parsed_code,
+            "error": docs["error"]
+        }
 
-    quality = score_documentation(parsed_code, docs["readme"])
+    try:
+        quality = score_documentation(parsed_code, docs["readme"])
+    except Exception as e:
+        return {
+            "structure": parsed_code,
+            "documentation": docs,
+            "error": f"Scoring failed : {str(e)}"
+        }
 
     return {
         "structure": parsed_code,

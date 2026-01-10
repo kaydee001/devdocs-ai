@@ -99,17 +99,25 @@ def _score_coverage(parsed_code: Dict[str, Any], docs: str) -> float:
 
 def _generate_suggestions(scores: Dict[str, float]) -> List[str]:
     suggestions = []
-    if scores["structure"] < 15:
+    if scores["structure"] < 75:
         suggestions.append(
             "Add missing sections : Installation, Usage, Description or API Reference")
 
-    if scores["examples"] < 10:
+    if scores["examples"] < 66:
         suggestions.append(
             "Include code examples showing how to use functions/classes")
 
-    if scores["completeness"] < 20:
+    if scores["completeness"] < 80:
         suggestions.append(
             "Document all functions and classes; some are missing from the README")
+
+    if scores["clarity"] < 70:
+        suggestions.append(
+            "Improve clarity with better descriptions and explainations")
+
+    if scores["coverage"] < 70:
+        suggestions.append(
+            "Document function paramaters and return values more thoroughly")
 
     return suggestions
 

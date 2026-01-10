@@ -13,6 +13,9 @@ def generate_documentation(parsed_code: Dict[str, Any]) -> Dict[str, Any]:
     prompt = _build_prompt(parsed_code)
     docs = _call_groq(prompt)
 
+    if docs.startswith("[ERROR]"):
+        return {"error": docs}
+
     return {
         "readme": docs,
         "metadata": {
@@ -50,7 +53,7 @@ def _build_prompt(parsed_code: Dict[str, Any]) -> str:
                     method_params = ", ".join(method["params"])
                     prompt += f" - {method['name']}({method_params})\n"
 
-                    if func["docstring"]:
+                    if method["docstring"]:
                         prompt += f"Docstring : {method['docstring']}\n"
 
     else:
@@ -99,4 +102,4 @@ def _call_groq(prompt: str) -> str:
         return documentation
 
     except Exception as e:
-        return f"Error calling Groq API : {str(e)}"
+        return f"[ERROR] {str(e)}"
