@@ -81,20 +81,77 @@ def _score_examples(docs: str) -> float:
     if code_block_count >= 4:
         score += 1
 
-    docs_with_blocks = re.sub(r"```.?```", "", docs, flags=re.DOTALL)
+    docs_without_blocks = re.sub(r"```.*?```", "", docs, flags=re.DOTALL)
 
-    if "`" in docs_with_blocks:
+    if "`" in docs_without_blocks:
         score += 1
 
     return (score/3) * 100
 
 
 def _score_clarity(docs: str) -> float:
-    return 75.0
+    score = 0
+    word_count = len(docs.split())
+
+    if word_count > 300:
+        score += 40
+    elif word_count > 150:
+        score += 20
+
+    sentence_count = docs.count('.') + docs.count('!') + docs.count('?')
+    if sentence_count > 20:
+        score += 30
+    elif sentence_count > 10:
+        score += 15
+
+    helpful_words = ["example", "usage", "note",
+                     "important", "returns", "parameters"]
+    found_helpful = sum(1 for word in helpful_words if word in docs.lower())
+    if found_helpful >= 4:
+        score += 30
+    elif found_helpful >= 2:
+        score += 15
+
+    return min(score, 100)
 
 
 def _score_coverage(parsed_code: Dict[str, Any], docs: str) -> float:
-    return 70.0
+    """Score parameter/docstring coverage (0-100)."""
+    docs_lower = docs.lower()
+
+    total_items = 0
+    covered_items = 0
+
+    for func in parsed_code.get("functions", []):
+        if func.get("docstring"):
+            total_items += 1
+            if func["docstring"].lower() in docs_lower:
+                covered_items += 1
+
+        params = [p for p in func.get("params", []) if p != "self"]
+        total_items += len(params)
+        for param in params:
+            if param.lower() in docs_lower:
+                covered_items += 1
+
+    for cls in parsed_code.get("classes", []):
+        for method in cls.get("methods", []):
+            if method.get("docstring"):
+                total_items += 1
+                if method["docstring"].lower() in docs_lower:
+                    covered_items += 1
+
+            params = [p for p in method.get("params", []) if p != "self"]
+            total_items += len(params)
+            for param in params:
+                if param.lower() in docs_lower:
+                    covered_items += 1
+
+    if total_items == 0:
+        return 100.0
+
+    coverage_ratio = covered_items / total_items
+    return round(coverage_ratio * 100, 1)
 
 
 def _generate_suggestions(scores: Dict[str, float]) -> List[str]:
