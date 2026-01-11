@@ -95,7 +95,8 @@ def _call_groq(prompt: str) -> str:
                 }
             ],
             temperature=0.7,
-            max_tokens=2000
+            max_tokens=2000,
+            timeout=30
         )
         documentation = response.choices[0].message.content
 
