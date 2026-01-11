@@ -11,12 +11,14 @@ def score_documentation(parsed_code: Dict[str, Any], generated_docs: str) -> Dic
     scores["examples"] = _score_examples(generated_docs)
     scores["clarity"] = _score_clarity(generated_docs)
     scores["coverage"] = _score_coverage(parsed_code, generated_docs)
+    scores["code_quality"] = _score_code_quality(parsed_code)
 
-    total_score = (scores["completeness"]*0.25 +
-                   scores["structure"]*0.2 +
-                   scores["examples"]*0.2 +
-                   scores["clarity"]*0.2 +
-                   scores["coverage"]*0.15)
+    total_score = (scores["completeness"]*0.2 +
+                   scores["structure"]*0.15 +
+                   scores["examples"]*0.15 +
+                   scores["clarity"]*0.15 +
+                   scores["coverage"]*0.15 +
+                   scores["code_quality"]*0.2)
 
     suggestions = _generate_suggestions(scores)
 
@@ -154,6 +156,41 @@ def _score_coverage(parsed_code: Dict[str, Any], docs: str) -> float:
     return round(coverage_ratio * 100, 1)
 
 
+def _score_code_quality(parsed_code: Dict[str, Any]) -> float:
+    score = 0
+
+    total_functions = 0
+    functions_with_docstrings = 0
+    functions_with_types = 0
+
+    for func in parsed_code.get("functions", []):
+        total_functions += 1
+
+        if func.get("docstring"):
+            functions_with_docstrings += 1
+        if func.get("return_type"):
+            functions_with_types += 1
+
+    for cls in parsed_code.get("classes", []):
+        for method in cls.get("methods", []):
+            total_functions += 1
+
+            if method.get("docstring"):
+                functions_with_docstrings += 1
+            if method.get("return_type"):
+                functions_with_types += 1
+
+    if total_functions > 0:
+        docstring_ratio = functions_with_docstrings / total_functions
+        type_hint_ratio = functions_with_types / total_functions
+
+        score = (docstring_ratio*60) + (type_hint_ratio*40)
+    else:
+        score = 100
+
+    return round(score, 1)
+
+
 def _generate_suggestions(scores: Dict[str, float]) -> List[str]:
     suggestions = []
     if scores["structure"] < 75:
@@ -170,11 +207,15 @@ def _generate_suggestions(scores: Dict[str, float]) -> List[str]:
 
     if scores["clarity"] < 70:
         suggestions.append(
-            "Improve clarity with better descriptions and explainations")
+            "Improve clarity with better descriptions and explanations")
 
     if scores["coverage"] < 70:
         suggestions.append(
             "Document function paramaters and return values more thoroughly")
+
+    if scores["code_quality"] < 70:
+        suggestions.append(
+            "Add docstrings and type hints to your code for better documentation")
 
     return suggestions
 
